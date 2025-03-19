@@ -1,7 +1,50 @@
 import requests
-def ConvertToRubbles(currency):
+
+from google.oauth2 import service_account
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+import os.path
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+import gspread
+import pandas as pd
+import gspread_dataframe as gd
+
+def get_currency(currency):
     '''
     Just a method to convert money types
     '''
     data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
     print (data['Valute'][currency]['Value'])
+
+def get_google_sheet(df, sheet):
+    CLIENT_SECRETS_FILE = 'credentials.json'
+    SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
+
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+    creds = flow.run_local_server(port=0)
+
+    gc = gspread.authorize(creds)
+
+    # Connecting with `gspread` here
+    mySheet = gc.open_by_key(SPREADSHEET_ID)
+
+    try:
+        wks = mySheet.worksheet(sheet)
+    except gspread.exceptions.WorksheetNotFound:
+        wks = mySheet.add_worksheet(sheet, "999", "20")
+
+    gd.set_with_dataframe(wks, df)
+
+    print(df)
+
+#Example: (Почему-то 2 авторизации)
+#dict = {'name':["aparna", "pankaj", "sudhir", "Geeku"],
+#        'degree': ["MBA", "BCA", "M.Tech", "MBA"],
+#        'score':[90, 40, 80, 98]}
+
+#df = pd.DataFrame(dict)
+#SupportMethods.get_google_sheet(df, 'sheet1')

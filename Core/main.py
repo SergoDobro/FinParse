@@ -1,8 +1,10 @@
 # Import packages
+
 from dash import Dash, html, dash_table, dcc
 import pandas as pd
 import plotly.express as px
 import SupportMethods
+
 # Incorporate data
 df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
 
