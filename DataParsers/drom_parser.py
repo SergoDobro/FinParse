@@ -83,7 +83,7 @@ def collect_data(htmls):
             fuel = parts[1]
             drive_type = parts[2]
             transmission_type = parts[3]
-            usage = parts[4][:len(parts[4])-3] if len(parts) >= 5 else 0
+            usage = parts[4][:len(parts[4])-3].replace(" ", "") if len(parts) >= 5 else 0
         
 
             #print(model_name[0], parts, liters, power, fuel, drive_type, transmission_type, usage, year, price)
@@ -97,7 +97,7 @@ def collect_data(htmls):
                 fuel_type = fuel,
                 drive = drive_type,
                 power_hp = power,
-                mileage = usage,
+                mileage = int(usage),
                 transmission = transmission_type,
                 price = int(price),
                 url = url
