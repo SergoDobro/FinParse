@@ -1,4 +1,4 @@
-
+import SupportMethods
 def count_import_price_estimation(car_price, car_volume, car_age, horse_power, car_type : str):
     #recoded this methodology from website https://calcus.ru/rastamozhka-auto
     #it is faster to recode it than to use selenium + their api is not free and defended
@@ -42,8 +42,8 @@ def count_import_price_estimation(car_price, car_volume, car_age, horse_power, c
 
 
 def _get_arrs_(parameter, parameter_array, output_parameter_array):
-    '''When you have a table with 1 parameter and many varying fixed results based on it (tarifs, for example),
-    this method will make life easier '''
+    """When you have a table with 1 parameter and many varying fixed results based on it (tarifs, for example),
+    this method will make life easier """
     if parameter >= parameter_array[-1]:
         return output_parameter_array[-1]
     for i in len(parameter_array):
@@ -60,11 +60,11 @@ def _get_petrol_car_tarif_coed(car_price, car_volume, car_age):
         tarifs_per_price = [0.15, 0.15, 0.15, 0.15, 0.15, 0.125, 0.125]
         tarifs_euro_per_liter = [0.36, 0.4, 0.36, 0.44, 0.44, 0.44, 0.8]
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
-        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  # in euros need
+        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
         return max(price_for_price, price_for_volume)
     else:
         tarifs_euro_per_liter = [1.4, 1.5, 1.6, 2.2, 2.2, 2.2, 3.2]
-        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  # in euros needs conversion
+        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
 
 
 def _get_diesel_car_tarif_coed(car_price, car_volume, car_age):
@@ -77,10 +77,10 @@ def _get_diesel_car_tarif_coed(car_price, car_volume, car_age):
         tarifs_euro_per_liter = [0.32, 0.4, 0.8]
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
-        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  # in euros need
+        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
         return max(price_for_price, price_for_volume)
     else:
         tarifs_euro_per_liter = [1.5, 2.2, 3.2]
-        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  # in euros needs conversion #TODO
+        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter) * SupportMethods.get_hashed_currency("EUR")
 
 

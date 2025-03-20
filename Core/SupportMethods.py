@@ -1,21 +1,29 @@
 import requests
-
 from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
-
 import os.path
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-
 import gspread
 import pandas as pd
 import gspread_dataframe as gd
 
+currencies = {}
+def get_hashed_currency(currency):
+    """Just a method to convert money types, but it """
+    if currency not in currencies:
+        hash_currency(currency)
+
+    return  currencies[currency]
+
+def hash_currency(currency):
+    currencies[currency] = get_currency(currency)
+
 def get_currency(currency):
-    '''
+    """
     Just a method to convert money types
-    '''
+    """
     data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
     print (data['Valute'][currency]['Value'])
 

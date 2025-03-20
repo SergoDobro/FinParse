@@ -18,6 +18,7 @@ app.layout = [
     dcc.Graph(figure=px.histogram(df, x='continent', y='lifeExp', histfunc='avg'))
 ]
 
+SupportMethods.hash_currency("EUR") #precalculate currency to make life faster without 10k requests
 
 # Run the app
 if __name__ == '__main__':
