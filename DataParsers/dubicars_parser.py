@@ -94,7 +94,8 @@ def process_DubiCars():
   fig.update_layout( xaxis={'categoryorder':'total ascending'})
 
   #fig.show()
-  SupportMethods.set_google_sheet(all_cars_dataset, 'DubiCars')
+  SupportMethods.set_google_sheet(all_cars_dataset.reset_index(), 'DubiCars')
+
 
 # Запуск парсинга
 if __name__ == '__main__':

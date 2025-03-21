@@ -50,19 +50,29 @@ def set_google_sheet(df, sheet):
     print(df)
 
 
-def get_google_sheet(df, sheet):
-    CLIENT_SECRETS_FILE = '../DataParsers/credentials.json'
+def get_google_sheet(sheet):
+    API_KEY = "AIzaSyC3pdP-1JRpnzuArWS5V_WbVh5V9x-pmYU"
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
-    creds = flow.run_local_server(port=0)
+    RANGE_NAME = 'DubiCars!1:20'
 
-    gc = gspread.authorize(creds)
+    url = f'https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE_NAME}?key={API_KEY}'
 
-    # Connecting with `gspread` here
-    mySheet = gc.open_by_key(SPREADSHEET_ID)
-    return mySheet
+    # Выполняем GET-запрос
+    response = requests.get(url)
+
+    # Проверяем статус ответа
+    if response.status_code == 200:
+        data = response.json()
+        values = data.get('values', [])
+        pdas = pd.DataFrame(data=values)
+        for row in values:
+            print(row)
+    else:
+        print(f"Ошибка: {response.status_code}")
+
+
+    return pdas
 
 
 #Example: (Почему-то 2 авторизации)
