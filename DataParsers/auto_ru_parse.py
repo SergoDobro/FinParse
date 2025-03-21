@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 import time
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+import pandas as pd
 
 class Auto:
     def __init__(self, model: str = "", gen: str = "", year: int = 0, engine_volume: float = 0.0, fuel_type: str = "",
@@ -126,4 +127,21 @@ def modify_gen(car):
         car.gen = car.gen[0]+"-Series"
 
     elif car.gen[0].isdigit():
-        car.gen = car.gen[0]+"-Series"    
+        car.gen = car.gen[0]+"-Series"   
+
+def cars_list_to_dataframe(cars):
+    df = pd.DataFrame([{
+        "Модель": car.model,
+        "Серия": car.gen,
+        "Год": car.year,
+        "Объем двигателя (л)": car.engine_volume,
+        "Топливо": car.fuel_type,
+        "Привод": car.drive,
+        "Мощность (л.с.)": car.power_hp,
+        "Пробег (км)": car.mileage,
+        "КПП": car.transmission,
+        "Цена (₽)": car.price,
+        "Ссылка": car.url
+    } for car in cars])
+
+    return df
