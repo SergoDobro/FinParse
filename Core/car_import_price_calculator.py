@@ -1,7 +1,9 @@
 import SupportMethods
-def count_import_price_estimation(car_price, car_volume, car_age, horse_power, car_type : str):
+def count_import_price_estimation(car_price : float, car_volume: float, car_age: float, horse_power: float, car_type : str):
     #recoded this methodology from website https://calcus.ru/rastamozhka-auto
     #it is faster to recode it than to use selenium + their api is not free and defended
+    if type(car_price) is not float and type(car_price) is not int:
+        print('Error ocurred with this number: ' + str(car_price))
     import_oformlenie = _get_arrs_(car_price,
                                    [200000, 450000, 1200000, 2700000, 4200000, 5500000, 7000000],
                                    [1067, 2134, 4269, 11746, 16524, 21344, 27540, 30000]
@@ -46,7 +48,8 @@ def _get_arrs_(parameter, parameter_array, output_parameter_array):
     this method will make life easier """
     if parameter >= parameter_array[-1]:
         return output_parameter_array[-1]
-    for i in len(parameter_array):
+
+    for i in range(len(parameter_array)):
         if parameter < parameter_array[i]:
             return output_parameter_array[i]
 

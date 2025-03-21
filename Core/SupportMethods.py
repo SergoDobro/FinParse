@@ -54,7 +54,7 @@ def get_google_sheet(sheet):
     API_KEY = "AIzaSyC3pdP-1JRpnzuArWS5V_WbVh5V9x-pmYU"
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
-    RANGE_NAME = 'DubiCars!1:20'
+    RANGE_NAME = str(sheet)+'!1:20'
 
     url = f'https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE_NAME}?key={API_KEY}'
 
@@ -65,15 +65,20 @@ def get_google_sheet(sheet):
     if response.status_code == 200:
         data = response.json()
         values = data.get('values', [])
-        pdas = pd.DataFrame(data=values)
-        for row in values:
-            print(row)
+        pdas = pd.DataFrame(columns=values[0], data=values[1:])
     else:
         print(f"Ошибка: {response.status_code}")
 
+    #pdas.columns = pdas.iloc[0]
+    pdas = pdas.set_index(pdas.columns[0])
+
+    pdas.loc['price'] = pdas.loc['price'].apply(float)
 
     return pdas
 
+# Запуск приложения
+if __name__ == '__main__':
+    get_google_sheet('DubiCars')
 
 #Example: (Почему-то 2 авторизации)
 #dict = {'name':["aparna", "pankaj", "sudhir", "Geeku"],
