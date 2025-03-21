@@ -80,9 +80,13 @@ def collect_data(htmls):
 
             price = item.find('div', 'ListingItemPrice__content').get_text() if item.find('div', 'ListingItemPrice__content') else "Not found"
             price = price.lstrip('от ').replace('\xa0', '').rstrip('₽')
+            if price == "Not found":
+                continue
 
             usage = item.find('div', "ListingItem__kmAge").get_text()
             usage = usage[:len(usage)-3].replace('\xa0', '')
+            if usage == 'Но':
+                continue
             
             link = item.find('a', 'Link ListingItemTitle__link').get('href')
             parts = urlparse(link).path.split('/')
@@ -106,9 +110,20 @@ def collect_data(htmls):
                 url = link,
                 price = int(price) if price != "Not found" else "Not found",
                 year = item.find('div', 'ListingItem__year').get_text(),
-                mileage = usage
+                mileage = int(usage)
             )
             cars.append(new_car)
             
             # print(model_name) 
     return cars
+
+def modify_gen(car):
+    car.gen = car.gen.upper()
+    if car.gen[-2:] in ('ER', '_M') and not car.gen[0].isdigit():
+        car.gen = car.gen[:-2]
+        
+    elif car.gen[0].isdigit() and len(car.gen) >= 3:
+        car.gen = car.gen[0]+"-Series"
+
+    elif car.gen[0].isdigit():
+        car.gen = car.gen[0]+"-Series"    
