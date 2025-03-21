@@ -27,8 +27,8 @@ def get_currency(currency):
     data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
     print (data['Valute'][currency]['Value'])
 
-def get_google_sheet(df, sheet):
-    CLIENT_SECRETS_FILE = 'credentials.json'
+def set_google_sheet(df, sheet):
+    CLIENT_SECRETS_FILE = '../DataParsers/credentials.json'
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -48,6 +48,22 @@ def get_google_sheet(df, sheet):
     gd.set_with_dataframe(wks, df)
 
     print(df)
+
+
+def get_google_sheet(df, sheet):
+    CLIENT_SECRETS_FILE = '../DataParsers/credentials.json'
+    SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
+
+    SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+    creds = flow.run_local_server(port=0)
+
+    gc = gspread.authorize(creds)
+
+    # Connecting with `gspread` here
+    mySheet = gc.open_by_key(SPREADSHEET_ID)
+    return mySheet
+
 
 #Example: (Почему-то 2 авторизации)
 #dict = {'name':["aparna", "pankaj", "sudhir", "Geeku"],

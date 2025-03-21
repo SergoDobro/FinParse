@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import json
 import plotly.express as px
+from GetCarz.Core import SupportMethods
 
 def has_bad_attrs(element):
   bad_ids = ['app-promotion', 'ad-intersect']
@@ -48,9 +49,10 @@ def get_total_pages():
 
 def get_all_cars():
   total_pages = get_total_pages()
+  print("[log]: total pages: "+str(total_pages))
   return pd.concat([get_dubicars_page(i) for i in range(total_pages)], axis = 1)
 
-all_cars = get_all_cars()
+
 
 def refactor_data(cars_data):
   new_data = cars_data.copy()
@@ -61,30 +63,39 @@ def refactor_data(cars_data):
   new_data = new_data.loc[:, mask]
 
   return new_data
-all_cars_dataset = refactor_data(all_cars)
-
-all_cars_dataset
-
-fig = px.bar(x=all_cars_dataset.columns, y=all_cars_dataset.loc['price'])
-fig.update_layout( xaxis={'categoryorder':'total ascending'})
-
-fig.show()
-
-import numbers
-all_cars_dataset_2 = all_cars_dataset.copy()
-all_cars_dataset_2 = all_cars_dataset_2.transpose()
-grouped = all_cars_dataset_2.groupby("car_model")
-#display(grouped["price"].agg(["sum", "mean", "std"]))
-
-all_cars_dataset_2 = grouped.apply(lambda x: x).transpose()
-
-#display(all_cars_dataset_2)
 
 
-prices = grouped["price"].agg(["sum", "mean", "std"]);
 
-fig = px.bar(x=prices.index, y=prices['mean'])
-fig.update_layout( xaxis={'categoryorder':'total ascending'})
+def process_DubiCars():
+  all_cars = get_all_cars()
+  all_cars_dataset = refactor_data(all_cars)
 
-fig.show()
 
+
+  fig = px.bar(x=all_cars_dataset.columns, y=all_cars_dataset.loc['price'])
+  fig.update_layout( xaxis={'categoryorder':'total ascending'})
+
+  #fig.show()
+
+  import numbers
+  all_cars_dataset_2 = all_cars_dataset.copy()
+  all_cars_dataset_2 = all_cars_dataset_2.transpose()
+  grouped = all_cars_dataset_2.groupby("car_model")
+  #display(grouped["price"].agg(["sum", "mean", "std"]))
+
+  all_cars_dataset_2 = grouped.apply(lambda x: x).transpose()
+
+  #display(all_cars_dataset_2)
+
+
+  prices = grouped["price"].agg(["sum", "mean", "std"]);
+
+  fig = px.bar(x=prices.index, y=prices['mean'])
+  fig.update_layout( xaxis={'categoryorder':'total ascending'})
+
+  #fig.show()
+  SupportMethods.set_google_sheet(all_cars_dataset, 'DubiCars')
+
+# Запуск парсинга
+if __name__ == '__main__':
+  process_DubiCars()
