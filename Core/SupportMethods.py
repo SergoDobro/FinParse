@@ -16,18 +16,18 @@ def get_hashed_currency(currency):
     """Just a method to convert money types, but it """
     if currency not in currencies:
         hash_currency(currency)
-
     return  currencies[currency]
 
 def hash_currency(currency):
     currencies[currency] = get_currency(currency)
+    print(currencies[currency])
 
 def get_currency(currency):
     """
     Just a method to convert money types
     """
     data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
-    print (data['Valute'][currency]['Value'])
+    return data['Valute'][currency]['Value']
 
 def set_google_sheet(df, sheet):
     CLIENT_SECRETS_FILE = '../DataParsers/credentials.json'
@@ -51,7 +51,7 @@ def set_google_sheet(df, sheet):
 
 
 
-def get_google_sheet(sheet):
+def get_google_sheet(sheet, area):
     print(listdir('GetCarz/Core'))
     file = open("GetCarz/Core/google_sheets_api")
     API_KEY = file.read()
@@ -59,7 +59,9 @@ def get_google_sheet(sheet):
 
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
-    RANGE_NAME = str(sheet)+'!1:20'
+    RANGE_NAME = str(sheet)+area
+    print(sheet)
+    print(area)
 
     url = f'https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE_NAME}?key={API_KEY}'
 
@@ -76,14 +78,13 @@ def get_google_sheet(sheet):
 
     #pdas.columns = pdas.iloc[0]
     pdas = pdas.set_index(pdas.columns[0])
-
-    pdas.loc['price'] = pdas.loc['price'].apply(float)
+    print(pdas)
 
     return pdas
 
 # Запуск приложения
 if __name__ == '__main__':
-    get_google_sheet('DubiCars')
+    get_google_sheet('DubiCars', '!1:20')
 
 #Example: (Почему-то 2 авторизации)
 #dict = {'name':["aparna", "pankaj", "sudhir", "Geeku"],
