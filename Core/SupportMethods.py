@@ -8,6 +8,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import gspread
 import pandas as pd
 import gspread_dataframe as gd
+from os import listdir
+from os.path import isfile, join
 
 currencies = {}
 def get_hashed_currency(currency):
@@ -51,7 +53,11 @@ def set_google_sheet(df, sheet):
 
 
 def get_google_sheet(sheet):
-    API_KEY = "AIzaSyC3pdP-1JRpnzuArWS5V_WbVh5V9x-pmYU"
+    print(listdir('GetCarz/Core'))
+    file = open("GetCarz/Core/google_sheets_api")
+    API_KEY = file.read()
+    file.close()
+
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
     RANGE_NAME = str(sheet)+'!1:20'
