@@ -47,9 +47,8 @@ def set_google_sheet(df, sheet):
     except gspread.exceptions.WorksheetNotFound:
         wks = mySheet.add_worksheet(sheet, "999", "20")
 
-    gd.set_with_dataframe(wks, df)
+    gd.set_with_dataframe(wks, df.reset_index())
 
-    print(df)
 
 
 def get_google_sheet(sheet):
