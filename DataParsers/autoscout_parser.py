@@ -108,9 +108,7 @@ for model in models:
   elapsed_time = time.time() - start_time
   minutes = int(elapsed_time // 60)
   seconds = int(elapsed_time % 60)
-  if  minutes>0:
-      break
-  print(f"\rCurrent model: {model}. Прогресс: {100*(1+models.index(model))//len(models)}% . Текущее время выполнения: {minutes} мин {seconds} сек", end="", flush=True)
+  print(f"\rCurrent model: {model}. Прогресс: {100*(1+models.index(model))//len(models)}% . Текущее время выполнения: {minutes} мин {seconds} сек.")
 time.sleep(2)
 end_time = time.time()
 print()
