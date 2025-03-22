@@ -15,7 +15,9 @@ SupportMethods.hash_currency("EUR")  # precalculate currency to make life faster
 print(SupportMethods.get_hashed_currency("EUR"))
 
 # Инициализация приложения Dash
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[
+dbc.themes.DARKLY
+])
 
 
 def convert_autoscout_fuel_naming(name):
@@ -64,6 +66,7 @@ def preprocess_autoscout24_cars():
     autoscaut24_cars_dataset = autoscaut24_cars_dataset[autoscaut24_cars_dataset['вид топлива'] != '2']
     autoscaut24_cars_dataset = autoscaut24_cars_dataset[autoscaut24_cars_dataset['вид топлива'] != 'з']
     autoscaut24_cars_dataset = autoscaut24_cars_dataset[autoscaut24_cars_dataset['вид топлива'] != 'о']
+    autoscaut24_cars_dataset = autoscaut24_cars_dataset[autoscaut24_cars_dataset['модель'] != 'unknown']
     autoscaut24_cars_dataset[autoscaut24_cars_dataset['вид топлива'] == 'e'] = 'electro'
     autoscaut24_cars_dataset['цена'] = pd.to_numeric(
             autoscaut24_cars_dataset['цена'].str.replace('[^\d.]', '', regex=True), #gpt magic to convert prices correctly
@@ -166,6 +169,17 @@ aggregated_dubicars_cars = aggregate_dubicars()
 aggregated_drom_cars = aggregate_drom()
 aggregated_avito_cars = aggregate_avito()
 
+def make_graph_transparent(fig):
+    fig.update_layout(
+    paper_bgcolor = 'rgba(0,0,0,0)',
+    plot_bgcolor = 'rgba(0,0,0,0)',
+    font=dict(family="Old Standard TT",
+                  size=24,
+                  color="rgb(255, 255, 255)")
+    )
+
+
+
 def get_figure_aggregated_comparison():
     df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars,
                     aggregated_drom_cars, aggregated_avito_cars], join='inner', axis=1)
@@ -181,24 +195,30 @@ def get_figure_aggregated_comparison():
         go.Bar(name='Цена, dubicars без тарифов', x=df.index, y=df["Цена, dubicars"])
     ])
     fig.update_layout(barmode='group')
-
     fig.update_layout(xaxis={'categoryorder': 'total ascending'})
+    make_graph_transparent(fig)
     fig_graph = dcc.Graph(figure=fig, style={'height': '70vh'})
     return fig_graph
 
-get_figure_aggregated_comparison()
 
 def get_dubi_cars_aggregated_info(all_cars_dataset):
     all_cars_dataset_2 = all_cars_dataset.copy()
     all_cars_dataset_2 = all_cars_dataset_2.transpose()
     grouped = all_cars_dataset_2.groupby("car_model")
     prices = grouped["price"].agg(["sum", "mean", "std"])
-    fig = px.bar(x=prices.index, y=prices['mean'])
+    fig = px.bar(x=prices.index, y=prices['mean'], width=None)
     fig.update_layout(xaxis={'categoryorder': 'total ascending'})
-    fig_graph = dcc.Graph(figure=fig, style={'height': '70vh'})
+    make_graph_transparent(fig)
+    fig.update_layout(
+        title="Цены моделей DubiCars",
+        xaxis_title="Наименование модели",
+        yaxis_title="Цена"
+    )
+    fig_graph = dcc.Graph(figure=fig)
+
     return fig_graph
 
-def get_bar_graph_from_variable_by_car(df):
+def get_dubicars_bar_graph_from_variable_by_car(df):
     df = df.loc[:, ~df.columns.duplicated()]
 
     temp = pd.DataFrame(columns=['car','price_type', 'price', 'import price'])
@@ -212,15 +232,16 @@ def get_bar_graph_from_variable_by_car(df):
         temp.loc[2*i+1, "price_type"]= 'tariffs'
         temp.loc[2*i+1, "price"] = float(check_сonvert(df[df.columns[i]]['imported prices']))
 
-    fig_prices = px.bar(temp, x='car', y='price', color='price_type')
+    fig_prices = px.bar(temp, x='car', y='price', color='price_type', width=None)
     fig_prices.update_layout(xaxis={'categoryorder': 'total ascending'})
 
-    fig_prices.add_hline(y=np.median(df.loc['price']), line_width=3, line_dash="dash", line_color="green")
-    fig_prices.add_hline(y=np.median(df.loc['price']+ df.loc['imported prices']), line_width=3, line_dash="dash", line_color="red")
+    fig_prices.add_hline(y=np.mean(df.loc['price']), line_width=3, line_dash="dash", line_color="green", name='Средняя цена до тарифов')
+    fig_prices.add_hline(y=np.mean(df.loc['price']+ df.loc['imported prices']), line_width=3, line_dash="dash", line_color="red", annotation_text='Средняя цена после тарифов')
+    make_graph_transparent(fig_prices)
     fig_prices.update_layout(
-        title="DubiCars cars prices",
-        xaxis_title="Car id",
-        yaxis_title="price"
+        title="Цены DubiCars",
+        xaxis_title="Наименование позиции",
+        yaxis_title="Цена"
     )
 
 
@@ -228,54 +249,56 @@ def get_bar_graph_from_variable_by_car(df):
 
     return fig_graph
 
-def get_all_dubi_cars():
-    dubi_all_prices = get_bar_graph_from_variable_by_car(dubi_cars_dataset)
-    dubi_agregated_prices = get_dubi_cars_aggregated_info(dubi_cars_dataset)
-    return dubi_all_prices, dubi_agregated_prices
 
 def get_all_dubi_cars_by_type():
     grouped = dubi_cars_dataset.copy().transpose().groupby("fuel_type")
     prices = grouped["price"].agg(["count"])
 
-    fig = px.pie(names=prices.index, values=prices['count'])
+    fig = px.pie(names=prices.index, values=prices['count'], width=None)
+    make_graph_transparent(fig)
+
     fig.update_layout(xaxis={'categoryorder': 'total ascending'})
+    fig.update_layout(
+        title="Типы машин на DubiCars",
+        xaxis_title="Топливо",
+        yaxis_title="Количество позиций"
+    )
     fig_graph = dcc.Graph(
         figure=fig,
-        style={'height': '70vh'},
+        style={'height': '110vh'},
     )
 
     return fig_graph
 
-def get_all_autoscout_cars_by_type():
+def get_autoscout_cars_by_type():
     grouped = autoscaut24_cars_dataset.copy().groupby("вид топлива")
     prices = grouped["цена"].agg(["count"])
-    fig = px.pie(names=prices.index, values=prices['count'])
+    fig = px.pie(names=prices.index, values=prices['count'], width=None)
     fig.update_layout(xaxis={'categoryorder': 'total ascending'})
     fig_graph = dcc.Graph(
         figure=fig,
         style={'height': '70vh'},
     )
 
+    make_graph_transparent(fig)
     return fig_graph
 
-def get_all_autoscout_cars():
+def get_all_autoscout_cars_by_model():
     # В этом методе куча страданий с тем, чтобы нормально аггрегировать инфу, больно. чутка гпт под середену кода, ведь мой код не работал (в аналогичном методе дибикарз работал в то же время)
      #Но обработка автоскаут датасета ушла в начало теперь
-    grouped = autoscaut24_cars_dataset.groupby('модель', as_index=False).agg(
-        average_price=('цена', 'mean'),
-        total_imports=('imported prices', 'sum'),
-        price_deviation=('цена', 'std')
-    )
+
 
     fig = px.bar(
-        grouped,
-        x='Модель',
-        y='Средняя цена за модель',
-        labels={'average_price': 'Средняя цена за модель', 'модель': 'Модель'},
-        title='Анализ цен моделей'
+        aggregated_autoscout24_cars,
+        x=aggregated_autoscout24_cars.index,
+        y=aggregated_autoscout24_cars['Цена, autoscout'],
+        labels={'average_price': 'Средняя цена за модель', 'Модель': 'Модель'},
+        title='Анализ цен моделей', width=None
     )
     fig.update_layout(xaxis={'categoryorder': 'total ascending'})
-    return dcc.Graph(id='price-analysis', figure=fig, style={'height': '70vh'})
+
+    make_graph_transparent(fig)
+    return dcc.Graph(figure=fig)
 
 def get_all_autoscout_cars():
     _temp = autoscaut24_cars_dataset.transpose()
@@ -292,43 +315,79 @@ def get_all_autoscout_cars():
         temp.loc[2 * i + 1, "price_type"] = 'tariffs'
         temp.loc[2 * i + 1, "price"] = float(check_сonvert(df[df.columns[i]]['imported prices']))
 
-    fig_prices = px.bar(temp, x='car', y='price', color='price_type')
+    fig_prices = px.bar(temp, x='car', y='price', color='price_type', width=None, height=900)
     fig_prices.update_layout(xaxis={'categoryorder': 'total ascending'})
-    fig_graph = dcc.Graph(
-        figure=fig_prices,
-        style={'height': '70vh'},
+    fig_prices.update_layout(
+        title="Предложения машин на AutoScout",
+        xaxis_title="Наименоваании позиции",
+        yaxis_title="Цена"
     )
-
-    return fig_graph
+    make_graph_transparent(fig_prices)
+    return dcc.Graph(figure=fig_prices,
+        style={'height': '120vh'})
 
 def generate_graphs():
-    autoscout_all_prices = get_all_autoscout_cars()
-    dubi_all_prices, dubi_agregated_prices = get_all_dubi_cars()
-    return dubi_all_prices, dubi_agregated_prices, autoscout_all_prices, get_all_dubi_cars_by_type(), get_all_autoscout_cars_by_type()
+    return get_all_dubi_cars_by_type(), get_autoscout_cars_by_type()
 
-gfs, gfs2, scout, dubi_cars_type, autoscout_cars_type = generate_graphs()
+dubi_cars_graph_by_id = get_dubicars_bar_graph_from_variable_by_car(dubi_cars_dataset)
+dubi_cars_graph_by_model = get_dubi_cars_aggregated_info(dubi_cars_dataset)
+comparison_graph = get_figure_aggregated_comparison()
+
+scout_allcars_graph = get_all_autoscout_cars()
+scout_models_graph = get_all_autoscout_cars_by_model()
+
+dubi_cars_type, autoscout_cars_type = generate_graphs()
+
+
+card_dubicars = dbc.Card([
+    dbc.CardHeader('Данные с DubiCars'),
+    dbc.CardBody([
+        dbc.Row([
+            dbc.Col(dubi_cars_graph_by_id),
+        ]),
+        dbc.Row([
+            dbc.Col(dubi_cars_graph_by_model),
+        ])
+    ], style={'margin': '20px'}),
+    dbc.CardFooter("DubiCars меет небольшое предложение авто, зато широкий спект моделей"),
+
+])
+
+card_autoscout = dbc.Card([
+    dbc.CardHeader('Данные с AutoScout24'),
+    dbc.CardBody([
+    dbc.Row([
+            dbc.Col(scout_allcars_graph),
+        ]),
+        dbc.Row([
+            dbc.Col(scout_models_graph),
+        ])
+    ]),
+    dbc.CardFooter("AutoScout дает широкий спектрр предложений, но в среднем цена бедт значительно повышаться после ввоза"),
+], style={'margin': '20px'})
+
+card_comparisons = dbc.Card([
+    dbc.CardHeader('Сравнение средних ценовых показателей моделей'),
+    dbc.CardBody([comparison_graph]),
+    dbc.CardFooter("Импорт значительно снижает возможности заработка на ввозе автомобилей в Россию, но внутри страны, цены еще не подтянулсь к уровню других стран + импорт"),
+], style={'margin': '20px'})
+
 
 # Макет приложения
 app.layout = dbc.Container([
-    html.H1('Дашборд данных', className='text-center text-primary mb-4'),
+    html.H1('GetCarz Dashboard', className='text-center text-primary mb-4'),
+    dbc.Col([
+card_dubicars, card_autoscout,
 
-    dbc.Row([
-        dbc.Col(gfs),
-    ]),
-    dbc.Row([
-        dbc.Col(gfs2),
-        dbc.Col(scout)
-    ]),
-    dbc.Row([
-        dbc.Col(dubi_cars_type, md=12),
-        dbc.Col(autoscout_cars_type, md=12)
-    ]),
-    dbc.Row(
-        [get_figure_aggregated_comparison()]
-    )
-
-
-])
+        dbc.Card([
+            dbc.CardBody([
+                dubi_cars_type,
+                autoscout_cars_type
+            ]),
+        ], style={'margin': '15px'}),
+        card_comparisons
+    ])
+])#,fluid=True
 
 
 # Запуск приложения
