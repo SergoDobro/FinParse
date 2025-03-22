@@ -8,27 +8,29 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import gspread
 import pandas as pd
 import gspread_dataframe as gd
+from os import listdir
+from os.path import isfile, join
 
 currencies = {}
 def get_hashed_currency(currency):
     """Just a method to convert money types, but it """
     if currency not in currencies:
         hash_currency(currency)
-
     return  currencies[currency]
 
 def hash_currency(currency):
     currencies[currency] = get_currency(currency)
+    print(currencies[currency])
 
 def get_currency(currency):
     """
     Just a method to convert money types
     """
     data = requests.get('https://www.cbr-xml-daily.ru/daily_json.js').json()
-    print (data['Valute'][currency]['Value'])
+    return data['Valute'][currency]['Value']
 
-def get_google_sheet(df, sheet):
-    CLIENT_SECRETS_FILE = 'credentials.json'
+def set_google_sheet(df, sheet):
+    CLIENT_SECRETS_FILE = '../DataParsers/credentials.json'
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -45,9 +47,44 @@ def get_google_sheet(df, sheet):
     except gspread.exceptions.WorksheetNotFound:
         wks = mySheet.add_worksheet(sheet, "999", "20")
 
-    gd.set_with_dataframe(wks, df)
+    gd.set_with_dataframe(wks, df.reset_index())
 
-    print(df)
+
+
+def get_google_sheet(sheet, area):
+    print(listdir('GetCarz/Core'))
+    file = open("GetCarz/Core/google_sheets_api")
+    API_KEY = file.read()
+    file.close()
+
+    SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
+
+    RANGE_NAME = str(sheet)+area
+    print(sheet)
+    print(area)
+
+    url = f'https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE_NAME}?key={API_KEY}'
+
+    # Выполняем GET-запрос
+    response = requests.get(url)
+
+    # Проверяем статус ответа
+    if response.status_code == 200:
+        data = response.json()
+        values = data.get('values', [])
+        pdas = pd.DataFrame(columns=values[0], data=values[1:])
+    else:
+        print(f"Ошибка: {response.status_code}")
+
+    #pdas.columns = pdas.iloc[0]
+    pdas = pdas.set_index(pdas.columns[0])
+    print(pdas)
+
+    return pdas
+
+# Запуск приложения
+if __name__ == '__main__':
+    get_google_sheet('DubiCars', '!1:20')
 
 #Example: (Почему-то 2 авторизации)
 #dict = {'name':["aparna", "pankaj", "sudhir", "Geeku"],
