@@ -1,6 +1,6 @@
 __pycache__/
 .idea/
-credentials.json
+credentials.json 
 .DS_Store
 DataParsers/credentials.json
-google_sheets_api
+google_sheets_api 
