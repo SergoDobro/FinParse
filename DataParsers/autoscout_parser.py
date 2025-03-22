@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 import time
-from GetCarz.Core import SupportMethods
+from GetCarz.Core import support_methods
 
 
 def get_page(page_number, model):
@@ -131,4 +131,4 @@ for column in merged_table.columns:
 print("total amount: ", len(merged_table))
 
 
-SupportMethods.set_google_sheet(merged_table, 'AutoScout24')
+support_methods.set_google_sheet(merged_table, 'AutoScout24')

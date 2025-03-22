@@ -9,12 +9,12 @@ import plotly.express as px
 import pandas as pd
 from pandas.core.interchange.dataframe_protocol import DataFrame
 
-import SupportMethods
+import support_methods
 import plotly.graph_objects as go
 import car_import_price_calculator as import_calculator
 
-SupportMethods.hash_currency("EUR")  # precalculate currency to make life faster without 10k requests
-print(SupportMethods.get_hashed_currency("EUR"))
+support_methods.hash_currency("EUR")  # precalculate currency to make life faster without 10k requests
+print("Курс Евро:", support_methods.get_hashed_currency("EUR"))
 
 # Инициализация приложения Dash
 app = dash.Dash(__name__, external_stylesheets=[
@@ -28,7 +28,7 @@ def convert_autoscout_fuel_naming(name):
              , "Электро":'electro'
              , "Гибрид":'gasoline'}
     if name not in fuels.keys():
-        print(name)
+        #think that it is electro
         return 'electro'
     return fuels[name]
 def check_сonvert(element):
@@ -44,12 +44,15 @@ def check_сonvert(element):
 
 
 #preproooocessing
-dubi_cars_dataset = SupportMethods.get_google_sheet('DubiCars', '!1:20')
-autoscaut24_cars_dataset = SupportMethods.get_google_sheet('AutoScout24', '!A:J')
-autoru_cars_dataset = SupportMethods.get_google_sheet('AutoRu', '!A:L')
-drom_cars_dataset = SupportMethods.get_google_sheet('Drom', '!A:L')
-avito_cars_dataset = SupportMethods.get_google_sheet('Avito', '!A:L')
+print("Loading tables...")
 
+dubi_cars_dataset = support_methods.get_google_sheet('DubiCars', '!1:20')
+autoscaut24_cars_dataset = support_methods.get_google_sheet('AutoScout24', '!A:J')
+autoru_cars_dataset = support_methods.get_google_sheet('AutoRu', '!A:L')
+drom_cars_dataset = support_methods.get_google_sheet('Drom', '!A:L')
+avito_cars_dataset = support_methods.get_google_sheet('Avito', '!A:L')
+
+print("Loading tables done")
 
 #region Preprocessing
 
@@ -74,7 +77,7 @@ def preprocess_autoscout24_cars():
     autoscaut24_cars_dataset['цена'] = pd.to_numeric(
             autoscaut24_cars_dataset['цена'].str.replace('[^\d.]', '', regex=True), #gpt magic to convert prices correctly
             errors='coerce'
-        ) * float(SupportMethods.get_hashed_currency("EUR"))
+        ) * float(support_methods.get_hashed_currency("EUR"))
     autoscaut24_cars_dataset = autoscaut24_cars_dataset.loc[(autoscaut24_cars_dataset=='').any(axis=1)]
 
     #GPT (my cleaning failed here): Clean and convert numeric columns
@@ -108,6 +111,7 @@ def preprocess_avito():
 
 #endregion
 
+print("Preprocessing of tables...")
 
 preprocess_dubi_cars()
 
@@ -119,6 +123,7 @@ preprocess_autoscout24_cars()
 preprocess_autoru()
 preprocess_drom()
 preprocess_avito()
+print("Preprocessing of tables done")
 
 
 
@@ -134,29 +139,24 @@ def aggregate_avito():
     aggregated_avito_cars = avito_cars_dataset.groupby("Серия").mean(numeric_only=True)
     setup_index_to_model(aggregated_avito_cars)
     aggregated_avito_cars.columns = ["Цена, avito"]
-    print(aggregated_avito_cars.index)
     return aggregated_avito_cars
 
 def aggregate_autoru():
     aggregated_autoru_cars = autoru_cars_dataset.groupby("Серия").mean(numeric_only=True)
     setup_index_to_model(aggregated_autoru_cars)
     aggregated_autoru_cars.columns = ["Цена, autoru"]
-    print(aggregated_autoru_cars.index)
     return aggregated_autoru_cars
 
 def aggregate_drom():
     aggregated_drom_cars = drom_cars_dataset.groupby("Серия").mean(numeric_only=True)
     setup_index_to_model(aggregated_drom_cars)
     aggregated_drom_cars.columns = ["Цена, drom"]
-    print(aggregated_drom_cars.index)
     return aggregated_drom_cars
 
 def aggregate_autoscout():
-    print(autoscaut24_cars_dataset["модель"])
     aggregated_autoscout24_cars = autoscaut24_cars_dataset.groupby("модель").mean(numeric_only=True)
     setup_index_to_model(aggregated_autoscout24_cars)
     aggregated_autoscout24_cars.columns = ["Цена, autoscout", "Тарифы, autoscout"]
-    print(aggregated_autoscout24_cars.index)
     return aggregated_autoscout24_cars
 
 
@@ -191,6 +191,8 @@ def aggregate_dubicars():
     aggregated_dubicars_cars.columns = ["Цена, dubicars", "Тарифы, dubicars"]
     return aggregated_dubicars_cars
 
+
+
 #endregion
 
 aggregated_autoru_cars = aggregate_autoru()
@@ -198,6 +200,10 @@ aggregated_autoscout24_cars = aggregate_autoscout()
 aggregated_dubicars_cars = aggregate_dubicars()
 aggregated_drom_cars = aggregate_drom()
 aggregated_avito_cars = aggregate_avito()
+print("Aggregation Done")
+
+
+#region Making charts
 
 def make_graph_transparent(fig):
     fig.update_layout(
@@ -214,7 +220,6 @@ def get_figure_aggregated_comparison():
     df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars,
                     aggregated_drom_cars, aggregated_avito_cars], join='inner', axis=1)
     df = df.dropna()
-    print(df)
     fig = go.Figure(data=[
         go.Bar(name='Цена, autoru',         x=df.index, y=df["Цена, autoru"]),
         go.Bar(name='Цена, drom',      x=df.index, y=df["Цена, drom"]),
@@ -235,8 +240,8 @@ def get_figure_aggregated_comparison_Income():
     df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars,
                     aggregated_drom_cars, aggregated_avito_cars], join='inner', axis=1)
     df = df.dropna()
-    print(df.columns)
-    print(df)
+
+
     df['Прибыль до тарифов'] = df.apply(lambda row:
                              max(row['Цена, autoru'], row['Цена, avito'], row['Цена, drom']) -
                              min(row['Цена, dubicars'], row['Цена, autoscout']), axis = 1)
@@ -245,7 +250,7 @@ def get_figure_aggregated_comparison_Income():
                              min(row['Цена, dubicars'] + row['Тарифы, dubicars'], row['Цена, autoscout']
                                  + row['Тарифы, autoscout']
                                  ), axis = 1)
-    print(df)
+
     fig = go.Figure(data=[
         go.Bar(name='Прибыль до тарифов',  x=df.index, y=df["Прибыль до тарифов"]),
         go.Bar(name='Прибыль после тарифов', x=df.index, y=df["Прибыль после тарифов"]),
@@ -400,7 +405,8 @@ def get_figure_agregate_model_by(model_name):
     auto_df = aggregate_df(autoru_cars_dataset, 'Пробег', 'AutoRu', False, 'count')
     df = pd.concat([auto_df], join='inner', axis=1)
     df = df.dropna()
-    print(df)
+
+
     fig = go.Figure(data=[
         go.Bar(name='Цена, autoru',         x=df.index, y=df["Цена, autoru"]),
         go.Bar(name='Цена, avito',      x=df.index, y=df["Цена, avito"]),

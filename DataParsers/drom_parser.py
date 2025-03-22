@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import time
 import re
-import GetCarz.Core.SupportMethods
+import GetCarz.Core.support_methods
 
 class Auto:
     def __init__(self, model: str = "", gen: str = "", year: int = 0, engine_volume: float = 0.0, fuel_type: str = "",
@@ -134,4 +134,4 @@ if __name__ == '__main__':
     htmls = parse_html(year, 10, False, 1)
     cars = collect_data(htmls)
 
-    GetCarz.Core.SupportMethods.set_google_sheet(cars_list_to_dataframe(cars), 'Drom')
+    GetCarz.Core.support_methods.set_google_sheet(cars_list_to_dataframe(cars), 'Drom')

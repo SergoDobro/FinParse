@@ -1,9 +1,9 @@
-import SupportMethods
+import support_methods
 def count_import_price_estimation(car_price : float, car_volume: float, car_age: float, horse_power: float, car_type : str):
     #recoded this methodology from website https://calcus.ru/rastamozhka-auto
     #it is faster to recode it than to use selenium + their api is not free and defended
-    if type(car_price) is not float and type(car_price) is not int:
-        print('Error ocurred with this number: ' + str(car_price))
+    #if type(car_price) is not float and type(car_price) is not int:
+    #    print('Error ocurred with this number: ' + str(car_price))
     import_oformlenie = _get_arrs_(car_price,
                                    [200000, 450000, 1200000, 2700000, 4200000, 5500000, 7000000],
                                    [1067, 2134, 4269, 11746, 16524, 21344, 27540, 30000]
@@ -63,11 +63,11 @@ def _get_petrol_car_tarif_coed(car_price, car_volume, car_age):
         tarifs_per_price = [0.15, 0.15, 0.15, 0.15, 0.15, 0.125, 0.125]
         tarifs_euro_per_liter = [0.36, 0.4, 0.36, 0.44, 0.44, 0.44, 0.8]
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
-        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
+        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * support_methods.get_hashed_currency("EUR")
         return max(price_for_price, price_for_volume)
     else:
         tarifs_euro_per_liter = [1.4, 1.5, 1.6, 2.2, 2.2, 2.2, 3.2]
-        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
+        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * support_methods.get_hashed_currency("EUR")
 
 
 def _get_diesel_car_tarif_coed(car_price, car_volume, car_age):
@@ -80,10 +80,10 @@ def _get_diesel_car_tarif_coed(car_price, car_volume, car_age):
         tarifs_euro_per_liter = [0.32, 0.4, 0.8]
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
         price_for_price = _get_arrs_(car_volume, tarif_bounndries, tarifs_per_price) * car_price
-        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * SupportMethods.get_hashed_currency("EUR")
+        price_for_volume = _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter)  * support_methods.get_hashed_currency("EUR")
         return max(price_for_price, price_for_volume)
     else:
         tarifs_euro_per_liter = [1.5, 2.2, 3.2]
-        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter) * SupportMethods.get_hashed_currency("EUR")
+        return _get_arrs_(car_volume, tarif_bounndries, tarifs_euro_per_liter) * support_methods.get_hashed_currency("EUR")
 
 

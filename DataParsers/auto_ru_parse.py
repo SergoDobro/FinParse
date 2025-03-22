@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
 
-import GetCarz.Core.SupportMethods
+import GetCarz.Core.support_methods
 
 
 class Auto:
@@ -155,4 +155,4 @@ if __name__ == '__main__':
     htmls = parse_html(year, 100, False, 1)
     cars = collect_data(htmls)
 
-    GetCarz.Core.SupportMethods.set_google_sheet(cars_list_to_dataframe(cars), 'AutoRu')
+    GetCarz.Core.support_methods.set_google_sheet(cars_list_to_dataframe(cars), 'AutoRu')

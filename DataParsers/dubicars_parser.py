@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import json
 import plotly.express as px
-from GetCarz.Core import SupportMethods
+from GetCarz.Core import support_methods
 
 def has_bad_attrs(element):
   bad_ids = ['app-promotion', 'ad-intersect']
@@ -94,7 +94,7 @@ def process_DubiCars():
   fig.update_layout( xaxis={'categoryorder':'total ascending'})
 
   #fig.show()
-  SupportMethods.set_google_sheet(all_cars_dataset, 'DubiCars')
+  support_methods.set_google_sheet(all_cars_dataset, 'DubiCars')
 
 
 # Запуск парсинга

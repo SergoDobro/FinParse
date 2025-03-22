@@ -20,7 +20,6 @@ def get_hashed_currency(currency):
 
 def hash_currency(currency):
     currencies[currency] = get_currency(currency)
-    print(currencies[currency])
 
 def get_currency(currency):
     """
@@ -52,7 +51,7 @@ def set_google_sheet(df, sheet):
 
 
 def get_google_sheet(sheet, area):
-    print(listdir('GetCarz/Core'))
+    #print(listdir('GetCarz/Core')) for debug
     file = open("GetCarz/Core/google_sheets_api")
     API_KEY = file.read()
     file.close()
@@ -60,9 +59,6 @@ def get_google_sheet(sheet, area):
     SPREADSHEET_ID = '1UR_AI0_ZLKf_jYTVaCUbjadquveFLJlGjR-tUcELD0Y'
 
     RANGE_NAME = str(sheet)+area
-    print(sheet)
-    print(area)
-
     url = f'https://sheets.googleapis.com/v4/spreadsheets/{SPREADSHEET_ID}/values/{RANGE_NAME}?key={API_KEY}'
 
     # Выполняем GET-запрос
@@ -72,15 +68,14 @@ def get_google_sheet(sheet, area):
     if response.status_code == 200:
         data = response.json()
         values = data.get('values', [])
-        pdas = pd.DataFrame(columns=values[0], data=values[1:])
+        df = pd.DataFrame(columns=values[0], data=values[1:])
     else:
-        print(f"Ошибка: {response.status_code}")
+        print(f"Ошибка: {response.status_code}, google sheets не вернули данные")
 
     #pdas.columns = pdas.iloc[0]
-    pdas = pdas.set_index(pdas.columns[0])
-    print(pdas)
+    df = df.set_index(df.columns[0])
 
-    return pdas
+    return df
 
 # Запуск приложения
 if __name__ == '__main__':
@@ -92,4 +87,4 @@ if __name__ == '__main__':
 #        'score':[90, 40, 80, 98]}
 
 #df = pd.DataFrame(dict)
-#SupportMethods.get_google_sheet(df, 'sheet1')
+#support_methods.get_google_sheet(df, 'sheet1')
