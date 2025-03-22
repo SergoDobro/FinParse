@@ -373,7 +373,12 @@ def get_all_autoscout_cars():
         temp.loc[2 * i + 1, "price_type"] = 'tariffs'
         temp.loc[2 * i + 1, "price"] = float(check_сonvert(df[df.columns[i]]['imported prices']))
 
+
     fig_prices = px.bar(temp, x='car', y='price', color='price_type', width=None, height=200)
+
+    newnames = {"tariffs":"Тариф","base":"Цена"}
+    fig_prices.for_each_trace(lambda t: t.update(name = newnames[t.name]))
+
     fig_prices.update_layout(xaxis={'categoryorder': 'total ascending'}, legend_title=None)
     fig_prices.update_layout(
         title="Предложения машин на AutoScout",
@@ -466,7 +471,7 @@ card_comparisons = dbc.Card([
 
 # Макет приложения
 app.layout = dbc.Container([
-    html.H1('GetCarz Dashboard', className='text-center text-primary mb-4'),
+    html.H1('GetCarz Dashboard', className='text-center text-white mb-4'),
     dbc.Col([
 card_dubicars, card_autoscout, card_comparisons
     ])
@@ -475,4 +480,4 @@ card_dubicars, card_autoscout, card_comparisons
 
 # Запуск приложения
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
