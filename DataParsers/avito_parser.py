@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import pandas as pd
 import re
 import requests
+import GetCarz.Core.SupportMethods
 
 class Auto:
     def __init__(self, model: str = "", gen: str = "", year: int = 0, engine_volume: float = 0.0, fuel_type: str = "",
@@ -27,7 +28,7 @@ class Auto:
                 f"{self.transmission} | {self.drive} | {self.price} ₽ | {self.url}")
 
 
-def parse_html(num_pages):
+def parse_html(num_pages, start_page=1):
     """
     num_pages - количество страниц для парсинга
 
@@ -36,7 +37,8 @@ def parse_html(num_pages):
 
     htmls = []                                                                                      # сюда положим все HTML-коды, чтобы парсить после выкачки данных
 
-    for page in range(1, num_pages + 1):
+    for page in range(start_page, num_pages + 1):
+        print(f"processed pages: {page}/{num_pages}")
         url = f"https://www.avito.ru/all/avtomobili/bmw-ASgBAgICAUTgtg3klyg?cd=1&f=ASgBAgECAUTgtg3klygBRfqMFBd7ImZyb20iOjIwMTAsInRvIjpudWxsfQ&p={page}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
@@ -107,3 +109,27 @@ def modify_gen(car):
     if car.gen.isdigit():
         car.gen += '-Series'
 
+
+def cars_list_to_dataframe(cars):
+    df = pd.DataFrame([{
+        "Модель": car.model,
+        "Серия": car.gen,
+        "Год": car.year,
+        "Объем двигателя": car.engine_volume,
+        "Топливо": car.fuel_type,
+        "Привод": car.drive,
+        "Мощность": car.power_hp,
+        "Пробег": car.mileage,
+        "КПП": car.transmission,
+        "Цена": car.price,
+        "Ссылка": car.url
+    } for car in cars])
+
+    return df
+
+# Запуск парсинга
+if __name__ == '__main__':
+    htmls = parse_html(10, 1)
+    cars = collect_data(htmls)
+
+    GetCarz.Core.SupportMethods.set_google_sheet(cars_list_to_dataframe(cars), 'Avito')

@@ -44,6 +44,7 @@ dubi_cars_dataset = SupportMethods.get_google_sheet('DubiCars', '!1:20')
 autoscaut24_cars_dataset = SupportMethods.get_google_sheet('AutoScout24', '!A:J')
 autoru_cars_dataset = SupportMethods.get_google_sheet('AutoRu', '!A:L')
 drom_cars_dataset = SupportMethods.get_google_sheet('Drom', '!A:L')
+avito_cars_dataset = SupportMethods.get_google_sheet('Avito', '!A:L')
 
 
 #region Preprocessing
@@ -94,6 +95,9 @@ def preprocess_autoru():
 def preprocess_drom():
     drom_cars_dataset['Цена'] = drom_cars_dataset['Цена'].apply(float)
     drom_cars_dataset['Серия'] = drom_cars_dataset['Серия'].str.upper().replace('_', ' ')
+def preprocess_avito():
+    avito_cars_dataset['Цена'] = avito_cars_dataset['Цена'].apply(float)
+    avito_cars_dataset['Серия'] = avito_cars_dataset['Серия'].str.upper().replace('_', ' ')
 
 
 #endregion
@@ -102,6 +106,7 @@ preprocess_dubi_cars()
 preprocess_autoscout24_cars()
 preprocess_autoru()
 preprocess_drom()
+preprocess_avito()
 
 
 
@@ -111,6 +116,13 @@ def setup_index_to_model(df):
     df.index.name = "Модель"
     df.index = df.index.str.upper()
     df.index = df.index.str.replace('_', ' ')
+
+def aggregate_avito():
+    aggregated_avito_cars = avito_cars_dataset.groupby("Серия").mean(numeric_only=True)
+    setup_index_to_model(aggregated_avito_cars)
+    aggregated_avito_cars.columns = ["Цена, avito"]
+    print(aggregated_avito_cars.index)
+    return aggregated_avito_cars
 
 def aggregate_autoru():
     aggregated_autoru_cars = autoru_cars_dataset.groupby("Серия").mean(numeric_only=True)
@@ -152,15 +164,17 @@ aggregated_autoru_cars = aggregate_autoru()
 aggregated_autoscout24_cars = aggregate_autoscout()
 aggregated_dubicars_cars = aggregate_dubicars()
 aggregated_drom_cars = aggregate_drom()
+aggregated_avito_cars = aggregate_avito()
 
 def get_figure_aggregated_comparison():
     df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars,
-                    aggregated_drom_cars], join='inner', axis=1)
+                    aggregated_drom_cars, aggregated_avito_cars], join='inner', axis=1)
     df = df.dropna()
     print(df)
     fig = go.Figure(data=[
         go.Bar(name='Цена, autoru',         x=df.index, y=df["Цена, autoru"]),
         go.Bar(name='Цена, drom',      x=df.index, y=df["Цена, drom"]),
+        go.Bar(name='Цена, avito',      x=df.index, y=df["Цена, avito"]),
         go.Bar(name='Цена, autoscout',      x=df.index, y=df["Цена, autoscout"] + df["Тарифы, autoscout"]),
         go.Bar(name='Цена, autoscout без тарифов', x=df.index, y=df["Цена, autoscout"]),
         go.Bar(name='Цена, dubicars',      x=df.index, y=df["Цена, dubicars"] + df["Тарифы, dubicars"]),
