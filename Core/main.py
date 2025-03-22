@@ -43,6 +43,7 @@ def check_сonvert(element):
 dubi_cars_dataset = SupportMethods.get_google_sheet('DubiCars', '!1:20')
 autoscaut24_cars_dataset = SupportMethods.get_google_sheet('AutoScout24', '!A:J')
 autoru_cars_dataset = SupportMethods.get_google_sheet('AutoRu', '!A:L')
+drom_cars_dataset = SupportMethods.get_google_sheet('Drom', '!A:L')
 
 
 #region Preprocessing
@@ -88,11 +89,11 @@ def preprocess_autoscout24_cars():
 
     autoscaut24_cars_dataset['модель'] = autoscaut24_cars_dataset['модель'].str.upper().replace('_', ' ')
 def preprocess_autoru():
-    print(autoru_cars_dataset.columns)
-    print(autoru_cars_dataset.index)
-    print(autoru_cars_dataset)
     autoru_cars_dataset['Цена'] = autoru_cars_dataset['Цена'].apply(float)
     autoru_cars_dataset['Серия'] = autoru_cars_dataset['Серия'].str.upper().replace('_', ' ')
+def preprocess_drom():
+    drom_cars_dataset['Цена'] = drom_cars_dataset['Цена'].apply(float)
+    drom_cars_dataset['Серия'] = drom_cars_dataset['Серия'].str.upper().replace('_', ' ')
 
 
 #endregion
@@ -100,26 +101,35 @@ def preprocess_autoru():
 preprocess_dubi_cars()
 preprocess_autoscout24_cars()
 preprocess_autoru()
+preprocess_drom()
 
 
 
 #region Aggregation
 
+def setup_index_to_model(df):
+    df.index.name = "Модель"
+    df.index = df.index.str.upper()
+    df.index = df.index.str.replace('_', ' ')
+
 def aggregate_autoru():
     aggregated_autoru_cars = autoru_cars_dataset.groupby("Серия").mean(numeric_only=True)
-    aggregated_autoru_cars.index.name = "Модель"
-    aggregated_autoru_cars.index = aggregated_autoru_cars.index.str.upper()
-    aggregated_autoru_cars.index = aggregated_autoru_cars.index.str.replace('_', ' ')
+    setup_index_to_model(aggregated_autoru_cars)
     aggregated_autoru_cars.columns = ["Цена, autoru"]
     print(aggregated_autoru_cars.index)
     return aggregated_autoru_cars
 
+def aggregate_drom():
+    aggregated_drom_cars = drom_cars_dataset.groupby("Серия").mean(numeric_only=True)
+    setup_index_to_model(aggregated_drom_cars)
+    aggregated_drom_cars.columns = ["Цена, drom"]
+    print(aggregated_drom_cars.index)
+    return aggregated_drom_cars
+
 def aggregate_autoscout():
     print(autoscaut24_cars_dataset["модель"])
     aggregated_autoscout24_cars = autoscaut24_cars_dataset.groupby("модель").mean(numeric_only=True)
-    aggregated_autoscout24_cars.index.name = "Модель"
-    aggregated_autoscout24_cars.index = aggregated_autoscout24_cars.index.str.upper()
-    aggregated_autoscout24_cars.index = aggregated_autoscout24_cars.index.str.replace('_', ' ')
+    setup_index_to_model(aggregated_autoscout24_cars)
     aggregated_autoscout24_cars.columns = ["Цена, autoscout", "Тарифы, autoscout"]
     print(aggregated_autoscout24_cars.index)
     return aggregated_autoscout24_cars
@@ -129,15 +139,11 @@ def aggregate_autoscout():
 def aggregate_dubicars():
     dubi_cars_dataset_tr = dubi_cars_dataset.transpose()
     dubi_cars_dataset_tr['price'] = dubi_cars_dataset_tr['price'].apply(float)
-    dubi_cars_dataset_tr['imported prices'] = dubi_cars_dataset_tr['imported prices'].apply(float)
+    dubi_cars_dataset_tr['imported prices'] = dubi_cars_dataset_tr['imported prices'].apply(float) #fixing mistakes of the past..
 
-    print(dubi_cars_dataset_tr["car_model"])
     aggregated_dubicars_cars = dubi_cars_dataset_tr.groupby("car_model").mean(numeric_only=True)
-    aggregated_dubicars_cars.index.name = "Модель"
-    aggregated_dubicars_cars.index = aggregated_dubicars_cars.index.str.upper()
-    aggregated_dubicars_cars.index = aggregated_dubicars_cars.index.str.replace('_', ' ')
+    setup_index_to_model(aggregated_dubicars_cars)
     aggregated_dubicars_cars.columns = ["Цена, dubicars", "Тарифы, dubicars"]
-    print(aggregated_dubicars_cars.index)
     return aggregated_dubicars_cars
 
 #endregion
@@ -145,13 +151,16 @@ def aggregate_dubicars():
 aggregated_autoru_cars = aggregate_autoru()
 aggregated_autoscout24_cars = aggregate_autoscout()
 aggregated_dubicars_cars = aggregate_dubicars()
+aggregated_drom_cars = aggregate_drom()
 
 def get_figure_aggregated_comparison():
-    df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars], join='inner', axis=1)
+    df = pd.concat([aggregated_autoru_cars, aggregated_autoscout24_cars, aggregated_dubicars_cars,
+                    aggregated_drom_cars], join='inner', axis=1)
     df = df.dropna()
     print(df)
     fig = go.Figure(data=[
         go.Bar(name='Цена, autoru',         x=df.index, y=df["Цена, autoru"]),
+        go.Bar(name='Цена, drom',      x=df.index, y=df["Цена, drom"]),
         go.Bar(name='Цена, autoscout',      x=df.index, y=df["Цена, autoscout"] + df["Тарифы, autoscout"]),
         go.Bar(name='Цена, autoscout без тарифов', x=df.index, y=df["Цена, autoscout"]),
         go.Bar(name='Цена, dubicars',      x=df.index, y=df["Цена, dubicars"] + df["Тарифы, dubicars"]),

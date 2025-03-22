@@ -44,7 +44,7 @@ def parse_html(year, num_pages, non_dymanic, start_page=1):
     htmls = []                                                                                      # сюда положим все HTML-коды, чтобы парсить после выкачки данных
 
     driver = webdriver.Edge(options=options)
-    for page in range(start_page + 1, num_pages + 1):
+    for page in range(start_page, num_pages + 1):
         driver.get(f"https://auto.ru/rossiya/cars/bmw/all/?year_from={year}&page={page}")           # открываем браузер
 
         htmls.append(driver.page_source)                                                            # Сохраняем HTML-код страницы
