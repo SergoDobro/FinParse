@@ -5,6 +5,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import pandas as pd
 
+import GetCarz.Core.SupportMethods
+
+
 class Auto:
     def __init__(self, model: str = "", gen: str = "", year: int = 0, engine_volume: float = 0.0, fuel_type: str = "",
                  drive: str = "", power_hp: int = 0, mileage: int = 0, transmission: str = "", price: int = 0, url: str = ""):
@@ -26,7 +29,7 @@ class Auto:
 
 
 
-def parse_html(year, num_pages, non_dymanic):
+def parse_html(year, num_pages, non_dymanic, start_page=1):
     """
     year - минимальный год выпуска
 
@@ -40,8 +43,8 @@ def parse_html(year, num_pages, non_dymanic):
 
     htmls = []                                                                                      # сюда положим все HTML-коды, чтобы парсить после выкачки данных
 
-    driver = webdriver.Chrome(options=options)
-    for page in range(1, num_pages + 1):
+    driver = webdriver.Edge(options=options)
+    for page in range(start_page + 1, num_pages + 1):
         driver.get(f"https://auto.ru/rossiya/cars/bmw/all/?year_from={year}&page={page}")           # открываем браузер
 
         htmls.append(driver.page_source)                                                            # Сохраняем HTML-код страницы
@@ -134,14 +137,22 @@ def cars_list_to_dataframe(cars):
         "Модель": car.model,
         "Серия": car.gen,
         "Год": car.year,
-        "Объем двигателя (л)": car.engine_volume,
+        "Объем двигателя": car.engine_volume,
         "Топливо": car.fuel_type,
         "Привод": car.drive,
-        "Мощность (л.с.)": car.power_hp,
-        "Пробег (км)": car.mileage,
+        "Мощность": car.power_hp,
+        "Пробег": car.mileage,
         "КПП": car.transmission,
-        "Цена (₽)": car.price,
+        "Цена": car.price,
         "Ссылка": car.url
     } for car in cars])
 
     return df
+
+# Запуск парсинга
+if __name__ == '__main__':
+    year = 2010  # самый ранний год выпуска машины
+    htmls = parse_html(year, 100, False, 1)
+    cars = collect_data(htmls)
+
+    GetCarz.Core.SupportMethods.set_google_sheet(cars_list_to_dataframe(cars), 'AutoRu')
